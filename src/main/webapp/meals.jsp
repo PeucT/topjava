@@ -26,6 +26,19 @@
     </style>
 </head>
 <body>
+<form method="post" >
+    <c:if test="${edit == null}" >
+        <input type="hidden" name="action" value="add"/>
+    </c:if>
+    <c:if test="${edit != null}" >
+        <input type="hidden" name="action" value="editSave"/>
+    </c:if>
+    <input type="datetime-local" name="date" value="${edit.dateTime}">
+    <input type="text" name="description" value="${edit.description}">
+    <input type="number" id="calories" name="calories" value="${edit.calories}">
+    <button type="submit">Save</button>
+</form>
+
 <table>
     <tr>
         <td>Дата</td>
@@ -34,18 +47,34 @@
     </tr>
 
     <c:forEach var="elem" items="${meals}">
-        <c:if test="${elem.exceed == true}">
-            <tr class="red">
-        </c:if>
-        <c:if test="${elem.exceed == false}">
-            <tr class="green">
-        </c:if>
+        <c:choose>
+            <c:when test="${elem.exceed == true}">
+                <tr class="red">
+            </c:when>
+            <c:otherwise>
+                <tr class="green">
+            </c:otherwise>
+        </c:choose>
             <td>
                 <fmt:parseDate pattern="yyyy-MM-dd'T'HH:mm" value="${elem.dateTime}" var="parsedDate" type="date" />
                 <fmt:formatDate value="${parsedDate}" pattern="dd.MM.yyyy HH:mm" />
             </td>
             <td>${elem.description}</td>
             <td>${elem.calories}</td>
+        <td>
+            <form method="post">
+                <input type="hidden" name="action" value="edit"/>
+                <input type="hidden" name="id" value="${elem.id}"/>
+                <input type="submit" value="EDIT"/>
+            </form>
+        </td>
+        <td>
+            <form method="post">
+                <input type="hidden" name="action" value="delete"/>
+                <input type="hidden" name="id" value="${elem.id}"/>
+                <input type="submit" value="DELETE"/>
+            </form>
+        </td>
         </tr>
     </c:forEach>
 </table>
