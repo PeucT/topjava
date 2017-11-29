@@ -4,10 +4,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import ru.javawebinar.topjava.AuthorizedUser;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.service.MealService;
+import ru.javawebinar.topjava.to.MealWithExceed;
+import ru.javawebinar.topjava.util.MealsUtil;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Collection;
+import java.util.List;
 
 import static ru.javawebinar.topjava.util.ValidationUtil.assureIdConsistent;
 import static ru.javawebinar.topjava.util.ValidationUtil.checkNew;
@@ -20,9 +26,34 @@ public class MealRestController {
     @Autowired
     private MealService service;
 
-    public Collection<Meal> getAll() {
+    public List<MealWithExceed> getAll() {
         log.info("getAll");
-        return service.getAll();
+        return MealsUtil.getWithExceeded(service.getAll(), AuthorizedUser.getCaloriesPerDay());
+    }
+
+    public List<MealWithExceed> filter(String startDateStr, String endDateStr, String startTimeStr, String endTimeStr) {
+        log.info("filter");
+        LocalDate startDate = LocalDate.MIN;
+        LocalDate endDate = LocalDate.MAX;
+
+        if (startDateStr != null && !"".equals(startDateStr)) {
+            startDate = LocalDate.parse(startDateStr);
+        }
+        if (endDateStr != null && !"".equals(endDateStr)) {
+            endDate = LocalDate.parse(endDateStr);
+        }
+
+        LocalTime startTime = LocalTime.MIN;
+        LocalTime endTime = LocalTime.MAX;
+
+        if (startTimeStr != null && !"".equals(startTimeStr)) {
+            startTime = LocalTime.parse(startTimeStr);
+        }
+        if (endTimeStr != null && !"".equals(endTimeStr)) {
+            endTime = LocalTime.parse(endTimeStr);
+        }
+
+        return /*MealsUtil.getWithExceeded(*/service.filter(startDate, endDate, startTime, endTime)/*, AuthorizedUser.getCaloriesPerDay())*/;
     }
 
     public Meal get(int id) {

@@ -4,8 +4,12 @@ import org.springframework.stereotype.Repository;
 import ru.javawebinar.topjava.AuthorizedUser;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.repository.MealRepository;
+import ru.javawebinar.topjava.to.MealWithExceed;
+import ru.javawebinar.topjava.util.DateTimeUtil;
 import ru.javawebinar.topjava.util.MealsUtil;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -18,13 +22,14 @@ public class InMemoryMealRepositoryImpl implements MealRepository {
 
     {
         MealsUtil.MEALS.forEach(this::save);
+        repository.forEach((k,v) -> v.setUserId(1));
     }
 
     @Override
     public Meal save(Meal meal) {
         if (meal.isNew()) {
             meal.setId(counter.incrementAndGet());
-            meal.setUserId(AuthorizedUser.id());
+            meal.setUserId(AuthorizedUser.getId());
         }
         repository.put(meal.getId(), meal);
         return meal;
@@ -32,9 +37,8 @@ public class InMemoryMealRepositoryImpl implements MealRepository {
 
     @Override
     public boolean delete(int id) {
-        if (repository.get(id).getUserId() == AuthorizedUser.id()) {
-            repository.remove(id);
-            return true;
+        if (repository.get(id).getUserId() == AuthorizedUser.getId()) {
+            return null != repository.remove(id);
         }else {
             return false;
         }
@@ -42,7 +46,7 @@ public class InMemoryMealRepositoryImpl implements MealRepository {
 
     @Override
     public Meal get(int id) {
-        if (repository.get(id).getUserId() == AuthorizedUser.id()) {
+        if (repository.get(id).getUserId() == AuthorizedUser.getId()) {
             return repository.get(id);
         }else
         {
@@ -51,9 +55,9 @@ public class InMemoryMealRepositoryImpl implements MealRepository {
     }
 
     @Override
-    public Collection<Meal> getAll() {
+    public List<Meal> getAll() {
         List<Meal> meal = repository.values().stream().
-                filter(entry -> entry.getUserId() == AuthorizedUser.id()).
+                filter(entry -> entry.getUserId() == AuthorizedUser.getId()).
                 collect(Collectors.toList());
         Collections.sort(meal, new Comparator<Meal>() {
             @Override
@@ -62,7 +66,16 @@ public class InMemoryMealRepositoryImpl implements MealRepository {
             }
         });
 
-        return repository.values();
+        return meal;
+    }
+
+    @Override
+    public List<MealWithExceed> filter(LocalDate startDate, LocalDate endDate, LocalTime startTime, LocalTime endTime) {
+        List<MealWithExceed> meal = MealsUtil.getWithExceeded(getAll(), AuthorizedUser.getCaloriesPerDay());
+        return meal.stream()
+                .filter(entry -> DateTimeUtil.isBetween(entry.getDateTime().toLocalDate(), startDate, endDate))
+                .filter(entry -> DateTimeUtil.isBetween(entry.getDateTime().toLocalTime(), startTime, endTime))
+                .collect(Collectors.toList());
     }
 }
 
