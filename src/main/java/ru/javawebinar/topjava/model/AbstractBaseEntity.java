@@ -23,7 +23,7 @@ public abstract class AbstractBaseEntity implements Persistable<Integer> {
 //    @Access(value = AccessType.PROPERTY)
     protected Integer id;
 
-    
+
     protected AbstractBaseEntity() {
     }
 
