@@ -23,6 +23,7 @@ public abstract class AbstractBaseEntity implements HasId {
 //    @Access(value = AccessType.PROPERTY)
     protected Integer id;
 
+
     protected AbstractBaseEntity() {
     }
 
